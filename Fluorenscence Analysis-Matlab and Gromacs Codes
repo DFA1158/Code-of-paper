@@ -145,3 +145,27 @@ for i = 1:row
 end
 C = cat(3,Red,Green,Blue);
 ---------------------------------
+
+
+gmx editconf -f TPP1_box.pdb -o complex.gro
+gmx editconf -f mix.pdb -o complex.gro
+gmx make_ndx -f TPP1_2_G.gro -o index.ndx
+gmx genrestr -f TPP1_2_G.gro -n index.ndx -o posre.itp -fc 1000 1000 1000
+gmx editconf -f complex.gro -o newbox.gro -bt dodecahedron -d 1.0
+gmx grompp -f preem.mdp -c newbox.gro -p TPP1_2_G.top -o preem.tpr -maxwarn 1
+gmx mdrun -v -deffnm preem
+gmx solvate -cp preem.gro  -cs spc216.gro -p TPP1_2_G.top -o solv.gro
+gmx grompp -f ions.mdp -c solv.gro -p TPP1_2_G.top -o ions.tpr -maxwarn 1
+dos2unix TPP1_2_G.top
+gmx genion -s ions.tpr -o solv_ions.gro -p TPP1_2_G.top -pname NA  -nname CL -neutral
+gmx grompp -f em.mdp -c solv_ions.gro -p TPP1_2_G.top -o em.tpr -maxwarn 1
+gmx mdrun -v -deffnm em
+gmx energy -f em.edr -o potential.xvg
+gmx make_ndx -f em.gro -o index.ndx
+gmx grompp -f nvt.mdp -c em.gro -r em.gro -n index.ndx -p TPP1_2_G.top -o nvt.tpr -maxwarn 1
+gmx mdrun -deffnm nvt
+gmx energy -f nvt.edr -o Temperature.xvg
+gmx grompp -f npt.mdp -c nvt.gro -t nvt.cpt -r nvt.gro -n index.ndx -p TPP1_2_G.top -o npt.tpr -maxwarn 1
+gmx mdrun -deffnm npt
+gmx energy -f npt.edr -o pressure.xvg
+gmx energy -f npt.edr -o density.xvg
