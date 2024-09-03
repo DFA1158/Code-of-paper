@@ -1,0 +1,147 @@
+%THESE CODES ARE BASED ON MATLAB FUNCTIONS.
+%TWO PARTS OF CODES ARE INCLUDED.
+
+--------------------------------------------------------------------------------------------------
+%PART I -- Image Preprocessing: Segmentation Area For Analysis
+%read the image file
+A = imread('File Path of The Image\File Nmae of The Image');
+%segment the image by inputting the pixel coordinates in the upper left and lower right corner of the area of interest
+NA = imcrop(A,[ , , , ]);
+%show the segmented image
+imshow(NA);
+%save the new segmented image to the current path with a new name
+imwrite(NA,'new image name');
+--------------------------------------------------------------------------------------------------
+%PART II -- Analyse The Preprocessed Images and Output The Results of The Analysis As an Image
+%read the image files
+A = imread('File Path of The First Image\File Nmae of The First Image');
+B = imread('File Path of The Second Image\File Nmae of The Second Image');
+%access the information of row, col, color of the image
+[row,col,color] = size(A);
+%get graysclae images of original images
+GA = zeros(row , col);
+GA = uint8(GA);
+for i = 1:row
+    for j = 1:col
+        gray = 0;
+        for k = 1:color
+            gray = gray + A(i ,j ,k );
+        end
+        if gray >10
+            gray = gray;
+        else gray = 0;
+        end
+        GA(i ,j) = gray;
+    end
+end
+[row , col , color] = size(B);
+GB = zeros(row,col);
+GB = uint8(GB);
+for i = 1:row
+    for j = 1:col
+        gray = 0;
+        for k = 1:color
+            gray = gray + B(i ,j ,k );
+        end
+        if gray >10
+            gray = gray;
+        else gray = 0;
+        end
+        GB(i ,j) = gray;
+    end
+end
+%uniformize the grayscale images
+originalMinValue = double(min(min(GA)));
+originalMaxValue = double(max(max(GA)));
+originalRange = originalMaxValue-originalMinValue;
+desiredMin = ;    %enter a minmum gray value
+desiredMax = ;  %enter a maximum gray value
+desiredRange=desiredMax-desiredMin;
+dblImageS255A=desiredRange*(double(GA)-originalMinValue)/originalRange+desiredMin;
+originalMinValue = double(min(min(GB)));
+originalMaxValue = double(max(max(GB)));
+originalRange = originalMaxValue-originalMinValue;
+desiredMin = ;    
+desiredMax = ;  
+desiredRange=desiredMax-desiredMin;
+dblImageS255B=desiredRange*(double(GB)-originalMinValue)/originalRange+desiredMin;
+%calculate the fluorescence overlap ratio of the first and the second images
+GFC = zeros(row,col);
+GFC = uint8(GFC);
+for i = 1:row
+    for j = 1:col
+        if GA(i ,j) == 0
+            if GB(i ,j) == 0
+                
+                GFC(i ,j) = 0;
+            else
+                GFC(i ,j) = 0;
+            end
+        else
+            if GB(i ,j) == 0
+                GFC(i ,j) = 0;
+            else
+                a = GA(i ,j);
+                b = GB(i ,j);
+                c = (b/a)*40;
+                GFC(i ,j) = c;
+            end
+        end
+    end
+end
+%statistics on the number of fluorescence pixels
+n1 = 0;
+n2 = 0;
+for i = 1:row
+    for j = 1:col
+        if GB(i ,j) == 0
+            n1 = n1;
+            n2 = n2;
+        else
+            if GFC(i ,j) == 0
+                n1 = n1 + 1;
+                n2 = n2;
+            else
+                n1 = n1 + 1;
+                n2 = n2 + 1;
+            end
+        end
+    end
+end
+n4 = 0;
+for i = 1:row
+    for j = 1:col
+        if GA(i ,j) == 0
+           n4 = n4;
+        else
+            if GA(i ,j) > 120
+                n4 = n4+1;
+            else
+                n4 = n4;
+            end
+        end
+    end
+end
+n3 = 0;
+n3 = double(n3);
+n3 = n2/n4;
+%convert the ratio of fluorescence overlap to a color image
+FC = ind2rgb(gray2ind(GFC,255),jet(255));
+Red = FC(:,:,1) ;
+Green = FC(:,:,2);
+Blue = FC(:,:,3);
+for i = 1:row
+    for j = 1:col
+        if Blue(i ,j) == 0.515625000000000
+            Blue(i ,j) = 1;
+            Red (i ,j) = 1;
+            Green(i ,j)= 1;
+        else
+            Blue(i ,j) = Blue(i ,j);
+            Red (i ,j) = Red (i ,j);
+            Green(i ,j)= Green(i ,j);
+        end
+    end
+end
+C = cat(3,Red,Green,Blue);
+---------------------------------
